@@ -172,12 +172,44 @@ enum DataTransferService {
         return try encoder().encode(backup)
     }
 
+    // A separate, explicitly typed helper keeps the Swift compiler from having
+    // to infer a large nested expression inside fetch().map().
+    private static func csvRow(for vacancy: Vacancy, formatter: ISO8601DateFormatter) -> [String] {
+        let minimumSalary: String = vacancy.salaryMin.map { String($0) } ?? ""
+        let maximumSalary: String = vacancy.salaryMax.map { String($0) } ?? ""
+        let createdDate: String = formatter.string(from: vacancy.createdAt)
+        let appliedDate: String = vacancy.appliedAt.map { formatter.string(from: $0) } ?? ""
+        let updatedDate: String = formatter.string(from: vacancy.updatedAt)
+        let technologies: String = vacancy.technologies.joined(separator: ";")
+
+        return [
+            vacancy.id.uuidString,
+            vacancy.company,
+            vacancy.role,
+            vacancy.url ?? "",
+            minimumSalary,
+            maximumSalary,
+            vacancy.currency ?? "",
+            vacancy.location ?? "",
+            vacancy.remoteEligibility,
+            vacancy.status,
+            String(vacancy.priority),
+            technologies,
+            vacancy.source ?? "",
+            createdDate,
+            appliedDate,
+            updatedDate,
+            vacancy.notes
+        ]
+    }
+
     static func exportCSV(context: ModelContext) throws -> Data {
-        let iso = ISO8601DateFormatter()
-        let rows = try context.fetch(FetchDescriptor<Vacancy>()).map { v in
-            [v.id.uuidString, v.company, v.role, v.url ?? "", v.salaryMin.map { String($0) } ?? "", v.salaryMax.map { String($0) } ?? "", v.currency ?? "", v.location ?? "", v.remoteEligibility, v.status, String(v.priority), v.technologies.joined(separator: ";"), v.source ?? "", iso.string(from: v.createdAt), v.appliedAt.map(iso.string(from:)) ?? "", iso.string(from: v.updatedAt), v.notes]
-        }
-        return Data(CSVCodec.encode([CSVCodec.headers] + rows).utf8)
+        let formatter = ISO8601DateFormatter()
+        let vacancies: [Vacancy] = try context.fetch(FetchDescriptor<Vacancy>())
+        let dataRows: [[String]] = vacancies.map { csvRow(for: $0, formatter: formatter) }
+        var allRows: [[String]] = [CSVCodec.headers]
+        allRows.append(contentsOf: dataRows)
+        return Data(CSVCodec.encode(allRows).utf8)
     }
 
     static func importJSON(_ data: Data, into context: ModelContext) throws -> ImportSummary {

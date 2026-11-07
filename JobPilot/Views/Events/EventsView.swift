@@ -46,7 +46,7 @@ struct EventsView: View {
 
     private var dayContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeading(title: selectedDate.formatted(.dateTime.day().month(.wide()).year()), subtitle: "События в выбранный день")
+            SectionHeading(title: selectedDate.formatted(.dateTime.day().month(.wide).year()), subtitle: "События в выбранный день")
             if tasksOnDay.isEmpty && interviewsOnDay.isEmpty {
                 SurfaceCard { PlaceholderView(symbol: "calendar", title: "Нет событий", message: "Создай интервью или follow-up в карточке вакансии.") }
             } else {
