@@ -13,7 +13,14 @@ struct SurfaceCard<Content: View>: View {
         content
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(JobStyle.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(JobStyle.surface)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(0.045), lineWidth: 0.5)
+                    }
+            }
     }
 }
 
@@ -22,7 +29,7 @@ struct SectionHeading: View {
     var subtitle: String? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.title3.bold())
+            Text(title).font(.system(.headline, design: .default, weight: .semibold))
             if let subtitle { Text(subtitle).font(.footnote).foregroundStyle(.secondary) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,8 +73,8 @@ struct PlaceholderView: View {
             Text(message).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 42)
-        .padding(.horizontal, 18)
+        .padding(.vertical, 22)
+        .padding(.horizontal, 16)
     }
 }
 

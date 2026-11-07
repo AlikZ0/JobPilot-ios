@@ -40,6 +40,7 @@ struct EventsView: View {
                 .padding(16)
             }
             .navigationTitle("Календарь")
+            .navigationBarTitleDisplayMode(.inline)
             .jobScreen()
         }
     }

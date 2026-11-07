@@ -21,19 +21,27 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                appearanceSection
-                notificationsSection
-                transferSection
-                privacySection
-                aboutSection
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    appearanceSection
+                    notificationsSection
+                    transferSection
+                    privacySection
+                    aboutSection
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 28)
             }
             .navigationTitle("Настройки")
+            .navigationBarTitleDisplayMode(.inline)
             .fileExporter(isPresented: $showingExporter, document: exportDocument,
                 contentType: exportType, defaultFilename: exportFilename) { outcome in
                 switch outcome {
-                case .success: result = ErrorNotice(title: "Готово", detail: "Файл сохранён. Храни резервную копию в безопасном месте.")
-                case .failure(let error): result = ErrorNotice(error, title: "Ошибка экспорта")
+                case .success:
+                    result = ErrorNotice(title: "Готово", detail: "Файл сохранён. Храни резервную копию в безопасном месте.")
+                case .failure(let error):
+                    result = ErrorNotice(error, title: "Ошибка экспорта")
                 }
             }
             .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.json, .commaSeparatedText]) { outcome in
@@ -45,82 +53,171 @@ struct SettingsView: View {
             .confirmationDialog("Импортировать данные?", isPresented: $showingImportConfirmation, titleVisibility: .visible) {
                 Button("Импортировать, пропустив дубликаты") { runImport() }
                 Button("Отмена", role: .cancel) { pendingImport = nil }
-            } message: { Text("Файл \(importFilename). Существующие вакансии не будут удалены или перезаписаны. Дубликаты по ID или ссылке пропустятся.") }
+            } message: {
+                Text("Файл \(importFilename). Существующие вакансии не будут удалены или перезаписаны. Дубликаты по ID или ссылке пропустятся.")
+            }
             .confirmationDialog("Удалить все данные JobPilot?", isPresented: $showingDeleteConfirmation) {
                 Button("Удалить все вакансии и события", role: .destructive) { eraseAll() }
-            } message: { Text("Удалятся все локальные записи и запланированные уведомления. Сначала сохрани JSON-резервную копию.") }
-            .alert(item: $result) { note in Alert(title: Text(note.title), message: Text(note.detail), dismissButton: .default(Text("Понятно"))) }
+            } message: {
+                Text("Удалятся все локальные записи и запланированные уведомления. Сначала сохрани JSON-резервную копию.")
+            }
+            .alert(item: $result) { note in
+                Alert(title: Text(note.title), message: Text(note.detail), dismissButton: .default(Text("Понятно")))
+            }
             .task { await refreshPermission() }
             .jobScreen()
         }
     }
 
     private var appearanceSection: some View {
-        Section("Оформление") {
-            Picker("Тема", selection: $appearance) {
-                Text("Система").tag("system")
-                Text("Светлая").tag("light")
-                Text("Тёмная").tag("dark")
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "Внешний вид")
+            SurfaceCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Тема приложения")
+                        .font(.subheadline.weight(.medium))
+                    Picker("Тема оформления", selection: $appearance) {
+                        Text("Система").tag("system")
+                        Text("Светлая").tag("light")
+                        Text("Тёмная").tag("dark")
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityLabel("Тема оформления")
+                }
             }
-            .pickerStyle(.segmented)
         }
     }
 
     private var notificationsSection: some View {
-        Section("Напоминания") {
-            HStack {
-                Label("Уведомления", systemImage: "bell")
-                Spacer()
-                Text(authorizationText).foregroundStyle(.secondary).font(.footnote)
-            }
-            Button("Разрешить уведомления") {
-                Task { @MainActor in
-                    do {
-                        let granted = try await NotificationService.requestPermission()
-                        await refreshPermission()
-                        if !granted {
-                            result = ErrorNotice(title: "Уведомления отключены", detail: "Открой Настройки iPhone → JobPilot → Уведомления.")
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "Напоминания")
+            SurfaceCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bell.badge")
+                            .font(.title3)
+                            .foregroundStyle(JobStyle.accent)
+                            .frame(width: 30)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Уведомления")
+                                .font(.subheadline.weight(.semibold))
+                            Text(authorizationText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                    } catch { result = ErrorNotice(error) }
+                        Spacer(minLength: 0)
+                    }
+                    Divider()
+                    Button {
+                        Task { @MainActor in
+                            do {
+                                let granted = try await NotificationService.requestPermission()
+                                await refreshPermission()
+                                if !granted {
+                                    result = ErrorNotice(title: "Уведомления отключены",
+                                        detail: "Открой Настройки iPhone → JobPilot → Уведомления.")
+                                }
+                            } catch {
+                                result = ErrorNotice(error)
+                            }
+                        }
+                    } label: {
+                        Label("Разрешить уведомления", systemImage: "bell.badge.fill")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .disabled(authorizationText == "Разрешены")
+                    Text("Для follow-up уведомление приходит в выбранное время, для интервью — за 30 минут.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            Text("Напоминание для follow-up приходит в выбранное время, для интервью — за 30 минут. Уже сохранённые записи не теряются при отказе в разрешении.")
-                .font(.footnote).foregroundStyle(.secondary)
         }
     }
 
     private var transferSection: some View {
-        Section("Резервная копия") {
-            Button {
-                prepareExport(type: .json)
-            } label: { Label("Экспорт JSON · все данные", systemImage: "square.and.arrow.up") }
-            Button {
-                prepareExport(type: .commaSeparatedText)
-            } label: { Label("Экспорт CSV · только вакансии", systemImage: "tablecells") }
-            Button { showingImporter = true } label: {
-                Label("Импортировать JSON или CSV", systemImage: "square.and.arrow.down")
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "Резервная копия")
+            SurfaceCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    Button { prepareExport(type: .json) } label: {
+                        settingsRow("Экспорт всех данных", symbol: "square.and.arrow.up", detail: "JSON · вакансии и события")
+                    }
+                    Divider()
+                    Button { prepareExport(type: .commaSeparatedText) } label: {
+                        settingsRow("Экспорт вакансий", symbol: "tablecells", detail: "CSV · только вакансии")
+                    }
+                    Divider()
+                    Button { showingImporter = true } label: {
+                        settingsRow("Импорт данных", symbol: "square.and.arrow.down", detail: "JSON или CSV")
+                    }
+                    .disabled(working)
+                }
+                .buttonStyle(.plain)
             }
-            .disabled(working)
-            Text("JSON хранит вакансии, статусы, контакты, задачи и интервью. CSV содержит только вакансии. Для восстановления после переустановки заранее экспортируй JSON.")
-                .font(.footnote).foregroundStyle(.secondary)
+            Text("Для восстановления после переустановки сохрани JSON-копию в «Файлах» или iCloud Drive.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 2)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
+    private func settingsRow(_ title: String, symbol: String, detail: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 18))
+                .foregroundStyle(JobStyle.accent)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.subheadline.weight(.medium)).foregroundStyle(.primary)
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .contentShape(Rectangle())
+    }
+
     private var privacySection: some View {
-        Section("Данные и конфиденциальность") {
-            Label("Данные хранятся на устройстве", systemImage: "iphone")
-                .foregroundStyle(.secondary)
-            Button(role: .destructive) { showingDeleteConfirmation = true } label: {
-                Label("Удалить все данные", systemImage: "trash")
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "Данные и конфиденциальность")
+            SurfaceCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    Label("Данные только на устройстве", systemImage: "iphone.gen3")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Divider()
+                    Button(role: .destructive) { showingDeleteConfirmation = true } label: {
+                        Label("Удалить все данные", systemImage: "trash")
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
             }
         }
     }
 
     private var aboutSection: some View {
-        Section("О приложении") {
-            LabeledContent("Версия", value: "1.0.0")
-            Text("JobPilot работает без аккаунта, обязательного интернета и внешней аналитики. Отслеживание откликов выполняется вручную.")
-                .font(.footnote).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "О приложении")
+            SurfaceCard {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("JobPilot")
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Text("1.0.1")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("Без аккаунта, рекламы и обязательного подключения к интернету.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 

@@ -62,6 +62,7 @@ struct StatisticsView: View {
                 .padding(16)
             }
             .navigationTitle("Статистика")
+            .navigationBarTitleDisplayMode(.inline)
             .jobScreen()
         }
     }

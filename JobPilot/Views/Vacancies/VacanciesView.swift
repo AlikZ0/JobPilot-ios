@@ -49,6 +49,7 @@ struct VacanciesView: View {
                 }
             }
             .navigationTitle("Вакансии")
+            .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $filter.search, prompt: "Компания, должность, стек")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
