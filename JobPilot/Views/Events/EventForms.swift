@@ -55,7 +55,7 @@ struct FollowUpFormView: View {
                 }
             }
             dismiss()
-        } catch { error = ErrorNotice(error) }
+        } catch { self.error = ErrorNotice(error) }
     }
 }
 
@@ -108,7 +108,7 @@ struct InterviewFormView: View {
                 catch { NotificationService.cancelInterview(id: item.id) }
             }
             dismiss()
-        } catch { error = ErrorNotice(error) }
+        } catch { self.error = ErrorNotice(error) }
     }
 }
 
@@ -167,6 +167,6 @@ struct ContactFormView: View {
         do {
             if original == nil { modelContext.insert(item) }
             try modelContext.save(); dismiss()
-        } catch { error = ErrorNotice(error) }
+        } catch { self.error = ErrorNotice(error) }
     }
 }

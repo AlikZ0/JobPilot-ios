@@ -290,7 +290,7 @@ struct VacancyDetailView: View {
             let previous = vacancy.vacancyStatus
             try VacancyStore.changeStatus(vacancy, to: status, in: modelContext)
             if previous != .applied && status == .applied { offerFollowUp = true }
-        } catch { error = ErrorNotice(error) }
+        } catch { self.error = ErrorNotice(error) }
     }
 
     private func createSuggestedFollowUp() {
@@ -302,7 +302,7 @@ struct VacancyDetailView: View {
                 do { try await NotificationService.scheduleFollowUp(task, company: vacancy.company) }
                 catch { self.error = ErrorNotice(error, title: "Задача сохранена без уведомления") }
             }
-        } catch { error = ErrorNotice(error) }
+        } catch { self.error = ErrorNotice(error) }
     }
 
     private func toggleTask(_ task: FollowUp) {
@@ -316,22 +316,22 @@ struct VacancyDetailView: View {
                     catch { self.error = ErrorNotice(error, title: "Задача сохранена без уведомления") }
                 }
             }
-        } catch { modelContext.rollback(); error = ErrorNotice(error) }
+        } catch { modelContext.rollback(); self.error = ErrorNotice(error) }
     }
     private func deleteTask(_ task: FollowUp) {
         do { NotificationService.cancelFollowUp(id: task.id); modelContext.delete(task); try modelContext.save() }
-        catch { error = ErrorNotice(error) }
+        catch { self.error = ErrorNotice(error) }
     }
     private func deleteInterview(_ interview: Interview) {
         do { NotificationService.cancelInterview(id: interview.id); modelContext.delete(interview); try modelContext.save() }
-        catch { error = ErrorNotice(error) }
+        catch { self.error = ErrorNotice(error) }
     }
     private func deleteContact(_ contact: Contact) {
         do { modelContext.delete(contact); try modelContext.save() }
-        catch { error = ErrorNotice(error) }
+        catch { self.error = ErrorNotice(error) }
     }
     private func removeVacancy() {
         do { try VacancyStore.delete(vacancy, in: modelContext); dismiss() }
-        catch { error = ErrorNotice(error) }
+        catch { self.error = ErrorNotice(error) }
     }
 }

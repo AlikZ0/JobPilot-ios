@@ -115,6 +115,6 @@ struct VacancyFormView: View {
             else if let vacancy { try VacancyStore.update(vacancy, with: valid, in: modelContext) }
             else { _ = try VacancyStore.create(valid, in: modelContext) }
             dismiss()
-        } catch { error = ErrorNotice(error) }
+        } catch { self.error = ErrorNotice(error) }
     }
 }
