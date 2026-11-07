@@ -208,7 +208,7 @@ struct SettingsView: View {
                         Text("JobPilot")
                             .font(.subheadline.weight(.semibold))
                         Spacer()
-                        Text("1.0.1")
+                        Text("1.0.2")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
