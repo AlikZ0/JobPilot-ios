@@ -26,6 +26,17 @@ targets:
           - Info.plist
     info:
       path: JobPilot/Info.plist
+      # XcodeGen regenerates Info.plist. Keep launch metadata here,
+      # otherwise the manual Info.plist keys may disappear in CI.
+      properties:
+        CFBundleDevelopmentRegion: ru
+        CFBundleDisplayName: JobPilot
+        CFBundleShortVersionString: "1.0.2"
+        CFBundleVersion: "3"
+        LSRequiresIPhoneOS: true
+        UILaunchStoryboardName: LaunchScreen
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.jobpilot

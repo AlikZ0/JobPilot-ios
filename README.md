@@ -1,3 +1,7 @@
+# JobPilot 1.0.2
+
+Сначала прочитай [FULLSCREEN-FIX.md](FULLSCREEN-FIX.md): исправление запуска на весь дисплей iPhone, проверка launch screen в GitHub Actions и безопасное обновление.
+
 # JobPilot · iOS 17+
 
 Локальный менеджер вакансий, откликов, интервью и follow-up. Приложение на SwiftUI + SwiftData без регистрации, сервера, веб-парсера, рекламы и сбора аналитики.
